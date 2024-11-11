@@ -1,8 +1,7 @@
 ﻿using SingleResponsibilityPrinciple.Contracts;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace SingleResponsibilityPrinciple
@@ -18,33 +17,19 @@ namespace SingleResponsibilityPrinciple
             _baseProvider = baseProvider;
             _logger = logger;
         }
-        private async Task<List<string>> GetTradeAsync()
+
+        public async IAsyncEnumerable<string> GetTradeDataAsync()
         {
             _logger.LogInfo("Fetching trade data asynchronously.");
-            List<string> tradesString = null;
 
-            // Call the base provider's GetTradeData (in this case, might be a URL-based provider)
-            var data = _baseProvider.GetTradeData();
-
-            // Here, if _baseProvider is fetching from a URL, you could handle parsing or adjust here
-            foreach (var item in data)
+            // Fetch data asynchronously from the base provider.
+            await foreach (var item in _baseProvider.GetTradeDataAsync())
             {
-                // Assuming item might be a JSON string or other structure you might adjust or handle
-                tradesString.Add(item.Replace("GBP", "EUR"));
+                // Replace "GBP" with "EUR" in each item before yielding.
+                yield return item.Replace("GBP", "EUR");
             }
 
-            _logger.LogInfo("Received trade strings of length = " + tradesString.Count);
-            return tradesString;
+            _logger.LogInfo("Trade data fetching complete.");
         }
-
-        public IEnumerable<string> GetTradeData()
-        {
-            Task<List<string>> task = Task.Run(() => GetTradeAsync());
-            task.Wait();
-
-            List<string> tradeList = task.Result;
-            return tradeList;
-        }
-
     }
 }

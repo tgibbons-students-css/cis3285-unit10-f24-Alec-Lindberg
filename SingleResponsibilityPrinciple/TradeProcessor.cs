@@ -1,5 +1,7 @@
 ﻿
 using SingleResponsibilityPrinciple.Contracts;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SingleResponsibilityPrinciple
 {
@@ -12,11 +14,20 @@ namespace SingleResponsibilityPrinciple
             this.tradeStorage = tradeStorage;
         }
 
-        public void ProcessTrades()
+        public async Task ProcessTradesAsync()
         {
-            var lines = tradeDataProvider.GetTradeData();
+            // Fetch trade data asynchronously
+            var lines = new List<string>();
+            await foreach (var line in tradeDataProvider.GetTradeDataAsync())
+            {
+                lines.Add(line);
+            }
+
+            // Parse trades from lines
             var trades = tradeParser.Parse(lines);
-            tradeStorage.Persist(trades);
+
+            // Persist trades to storage
+            await tradeStorage.PersistAsync(trades); // Assuming PersistAsync is implemented
         }
 
         private readonly ITradeDataProvider tradeDataProvider;

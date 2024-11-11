@@ -55,5 +55,42 @@ namespace SingleResponsibilityPrinciple.AdoNet
 
             logger.LogInfo("{0} trades processed", trades.Count());
         }
+
+        public async Task PersistAsync(IEnumerable<TradeRecord> trades)
+        {
+            // Connection string (same as before)
+            string azureConnectString = @"Server=tcp:cis3285-sql-server.database.windows.net,1433; Initial Catalog = Unit8_TradesDatabase; Persist Security Info=False; User ID=cis3285;Password=Saints4SQL; MultipleActiveResultSets = False; Encrypt = True; TrustServerCertificate = False; Connection Timeout = 60;";
+            logger.LogInfo("INFO: Connecting to AZURE cloud database... This may timeout the first time");
+
+            using (var connection = new SqlConnection(azureConnectString))
+            {
+                await connection.OpenAsync();  // Open connection asynchronously
+
+                // Explicit cast from DbTransaction to SqlTransaction
+                using (var transaction = (SqlTransaction)await connection.BeginTransactionAsync())  // Begin transaction asynchronously
+                {
+                    foreach (var trade in trades)
+                    {
+                        var command = connection.CreateCommand();
+                        command.Transaction = transaction;
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+                        command.CommandText = "dbo.insert_trade";
+                        command.Parameters.AddWithValue("@sourceCurrency", trade.SourceCurrency);
+                        command.Parameters.AddWithValue("@destinationCurrency", trade.DestinationCurrency);
+                        command.Parameters.AddWithValue("@lots", trade.Lots);
+                        command.Parameters.AddWithValue("@price", trade.Price);
+
+                        await command.ExecuteNonQueryAsync();  // Execute the command asynchronously
+                    }
+
+                    await transaction.CommitAsync();  // Commit transaction asynchronously
+                }
+                await connection.CloseAsync();  // Close connection asynchronously
+            }
+
+            logger.LogInfo("{0} trades processed", trades.Count());
+        }
     }
 }
+
+

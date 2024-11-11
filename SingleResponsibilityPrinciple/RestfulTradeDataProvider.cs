@@ -44,5 +44,10 @@ namespace SingleResponsibilityPrinciple
             List<string> tradeList = task.Result;
             return tradeList;
         }
+
+        public IAsyncEnumerable<string> GetTradeDataAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

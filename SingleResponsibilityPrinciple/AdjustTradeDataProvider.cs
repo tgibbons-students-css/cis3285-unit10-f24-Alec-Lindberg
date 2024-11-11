@@ -1,33 +1,26 @@
 ﻿using SingleResponsibilityPrinciple.Contracts;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SingleResponsibilityPrinciple
 {
     public class AdjustTradeDataProvider : ITradeDataProvider
     {
-        ITradeDataProvider origProvider;
+        private readonly ITradeDataProvider _origProvider;
 
-       public AdjustTradeDataProvider(ITradeDataProvider origProvider)
+        public AdjustTradeDataProvider(ITradeDataProvider origProvider)
         {
-            this.origProvider = origProvider;
+            _origProvider = origProvider;
         }
 
-        public IEnumerable<string> GetTradeData()
+        public async IAsyncEnumerable<string> GetTradeDataAsync()
         {
-         IEnumerable<string> lines = origProvider.GetTradeData();
-
-            List<string> result = new List<string>();
-
-            foreach (string line in lines)
+            await foreach (string line in _origProvider.GetTradeDataAsync())
             {
-                String newLine = line.Replace("GBP", "EUR");
-                result.Add(line);
+                // Replace "GBP" with "EUR" in each line and yield the modified line
+                string newLine = line.Replace("GBP", "EUR");
+                yield return newLine;
             }
-            return lines; 
         }
     }
 }

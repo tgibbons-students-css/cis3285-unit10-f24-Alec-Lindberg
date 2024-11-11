@@ -28,6 +28,11 @@ namespace SingleResponsibilityPrinciple
             return tradeData;
         }
 
+        public IAsyncEnumerable<string> GetTradeDataAsync()
+        {
+            throw new NotImplementedException();
+        }
+
         private readonly Stream stream;
         private readonly ILogger logger;
     }
