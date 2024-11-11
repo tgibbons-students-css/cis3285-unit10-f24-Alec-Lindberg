@@ -31,15 +31,17 @@ namespace SingleResponsibilityPrinciple
             ITradeValidator tradeValidator = new SimpleTradeValidator(logger);
 
             //These are three different trade providers that read from different sources
-            ITradeDataProvider fileProvider = new StreamTradeDataProvider(tradeStream, logger);
-            //ITradeDataProvider urlProvider = new URLTradeDataProvider(tradeURL, logger);
-            //ITradeDataProvider restfulProvider = new RestfulTradeDataProvider(restfulURL, logger);
+           // ITradeDataProvider fileProvider = new StreamTradeDataProvider(tradeStream, logger);
+            ITradeDataProvider urlProvider = new URLTradeDataProvider(tradeURL, logger);
+            ITradeDataProvider adjustProvider = new AdjustTradeDataProvider(urlProvider);
+            ITradeDataProvider restfulProvider = new RestfulTradeDataProvider(restfulURL, logger);
+            ITradeDataProvider asyncProvider = new URLAsyncProvider(adjustProvider, logger);
 
             ITradeMapper tradeMapper = new SimpleTradeMapper();
             ITradeParser tradeParser = new SimpleTradeParser(tradeValidator, tradeMapper);
             ITradeStorage tradeStorage = new AdoNetTradeStorage(logger);
 
-            TradeProcessor tradeProcessor = new TradeProcessor(fileProvider, tradeParser, tradeStorage);
+            TradeProcessor tradeProcessor = new TradeProcessor(adjustProvider, tradeParser, tradeStorage);
             //TradeProcessor tradeProcessor = new TradeProcessor(urlProvider, tradeParser, tradeStorage);
 
             tradeProcessor.ProcessTrades();
